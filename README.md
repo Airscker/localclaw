@@ -23,7 +23,26 @@ It answers you on the channels you already use (WhatsApp, Telegram, Slack, Disco
 
 If you want a personal, single-user assistant that feels local, fast, and always-on, this is it.
 
-[Website](https://openclaw.ai) · [Docs](https://docs.openclaw.ai) · [Vision](VISION.md) · [DeepWiki](https://deepwiki.com/openclaw/openclaw) · [Getting Started](https://docs.openclaw.ai/start/getting-started) · [Updating](https://docs.openclaw.ai/install/updating) · [Showcase](https://docs.openclaw.ai/start/showcase) · [FAQ](https://docs.openclaw.ai/help/faq) · [Wizard](https://docs.openclaw.ai/start/wizard) · [Nix](https://github.com/openclaw/nix-openclaw) · [Docker](https://docs.openclaw.ai/install/docker) · [Discord](https://discord.gg/clawd)
+[Website](https://openclaw.ai) · [Docs](https://docs.openclaw.ai) · [Repo](https://github.com/Airscker/localclaw.git) · [Vision](VISION.md) · [DeepWiki](https://deepwiki.com/openclaw/openclaw) · [Getting Started](https://docs.openclaw.ai/start/getting-started) · [Updating](https://docs.openclaw.ai/install/updating) · [Showcase](https://docs.openclaw.ai/start/showcase) · [FAQ](https://docs.openclaw.ai/help/faq) · [Wizard](https://docs.openclaw.ai/start/wizard) · [Nix](https://github.com/openclaw/nix-openclaw) · [Docker](https://docs.openclaw.ai/install/docker) · [Discord](https://discord.gg/clawd)
+
+## LocalClaw mode
+
+This fork is set up for a local-first runtime.
+
+- Build from source with `pnpm install` and `pnpm build`
+- Start the full local stack with `pnpm openclaw:local`
+- The Gateway will use the managed `llama.cpp` runtime by default
+- The default local model is `llama-cpp/Qwen3.5-35B-A3B`
+- Open the dashboard at `http://127.0.0.1:18789/`
+- If the dashboard asks for a token, run `pnpm openclaw dashboard`
+
+Fastest path:
+
+```bash
+pnpm install
+pnpm build
+pnpm openclaw:local
+```
 
 Preferred setup: run the onboarding wizard (`openclaw onboard`) in your terminal.
 The wizard guides you step by step through setting up the gateway, workspace, channels, and skills. The CLI wizard is the recommended path and works on **macOS, Linux, and Windows (via WSL2; strongly recommended)**.
@@ -93,21 +112,118 @@ Details: [Development channels](https://docs.openclaw.ai/install/development-cha
 
 Prefer `pnpm` for builds from source. Bun is optional for running TypeScript directly.
 
+This LocalClaw tree is wired for a local-first model runtime. `pnpm openclaw:local`
+starts the Gateway and uses the managed `llama.cpp` runtime by default, with
+`llama-cpp/Qwen3.5-35B-A3B` as the fallback model. No cloud API key is required
+for the default local flow.
+
 ```bash
-git clone https://github.com/openclaw/openclaw.git
+git clone https://github.com/Airscker/localclaw.git
 cd openclaw
 
 pnpm install
 pnpm ui:build # auto-installs UI deps on first run
 pnpm build
 
-pnpm openclaw onboard --install-daemon
+# Optional: prefetch the default local model artifacts
+pnpm llama:download
 
-# Dev loop (auto-reload on TS changes)
-pnpm gateway:watch
+# Start the full local stack (Gateway + managed llama.cpp)
+pnpm openclaw:local
 ```
 
 Note: `pnpm openclaw ...` runs TypeScript directly (via `tsx`). `pnpm build` produces `dist/` for running via Node / the packaged `openclaw` binary.
+
+### LocalClaw quick start
+
+1. Build the repo:
+
+   ```bash
+   pnpm install
+   pnpm build
+   ```
+
+2. Start LocalClaw:
+
+   ```bash
+   pnpm openclaw:local
+   ```
+
+3. Open the dashboard at `http://127.0.0.1:18789/`.
+
+4. If the dashboard shows `unauthorized: gateway token missing`, run:
+
+   ```bash
+   pnpm openclaw dashboard
+   ```
+
+   If you want the token directly, run:
+
+   ```bash
+   pnpm openclaw config get gateway.auth.token
+   ```
+
+   Paste that token into the dashboard's `Gateway Token` field and click `Connect`.
+
+5. Start chatting in either of these ways:
+
+   Dashboard usage:
+
+   - Open `http://127.0.0.1:18789/`
+   - Connect with the gateway token
+   - Use the browser chat / Control UI directly
+
+   Command-line usage:
+
+   ```bash
+   # Direct local run on this machine
+   pnpm openclaw agent --local --agent main --message "Reply with exactly LOCALCLAW-OK"
+
+   # Run through the Gateway once pnpm openclaw:local is already running
+   pnpm openclaw agent --agent main --message "Summarize the last message"
+   ```
+
+### Dashboard and local runtime debugging
+
+- Check that the managed local model runtime is configured and reachable:
+
+  ```bash
+  pnpm llama:status
+  curl http://127.0.0.1:32145/v1/models
+  ```
+
+- If the dashboard cannot connect, verify the gateway is listening:
+
+  ```bash
+  curl -I http://127.0.0.1:18789/
+  ```
+
+- If the dashboard asks for auth again, refresh the token bootstrap flow:
+
+  ```bash
+  pnpm openclaw dashboard
+  ```
+
+- If you want to inspect local models visible to OpenClaw:
+
+  ```bash
+  pnpm openclaw models list --local
+  ```
+
+- To stop the foreground local stack, use `Ctrl-C` in the `pnpm openclaw:local` terminal.
+
+- To stop only the managed `llama.cpp` server:
+
+  ```bash
+  pnpm llama:stop
+  ```
+
+### Development loop
+
+```bash
+# Dev loop (auto-reload on TS changes)
+pnpm gateway:watch
+```
 
 ## Security defaults (DM access)
 
