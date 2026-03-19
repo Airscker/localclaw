@@ -21,7 +21,8 @@ export const DEFAULT_LLAMA_HOST = "127.0.0.1";
 export const DEFAULT_LLAMA_PORT = 32145;
 export const DEFAULT_LLAMA_CTX_SIZE = 128_000;
 export const DEFAULT_LLAMA_MAX_TOKENS = 8_192;
-export const DEFAULT_LLAMA_START_TIMEOUT_MS = 10 * 60 * 1000;
+// Large GGUF cold starts on CPU-only or lower-VRAM hosts can take well over 10 minutes.
+export const DEFAULT_LLAMA_START_TIMEOUT_MS = 30 * 60 * 1000;
 
 export type ResolvedLlamaRuntimeConfig = {
   enabled: boolean;
